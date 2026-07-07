@@ -10,11 +10,11 @@
 
 | Field | Details |
 |---|---|
-| Group Number | ____________ |
-| Member 1 | Name / Reg. No. |
+| Group Number | 17 |
+| Member 1 | R.M.S.S.KUMARA / E/22/203 |
 | Member 2 | Name / Reg. No. |
 | Member 3 | Name / Reg. No. |
-| Member 4 | Name / Reg. No. |
+| Member 4 | A.W.H.PANCHANI / E/22/203 |
 | GitHub Repo | _(this repo)_ |
 
 ---
