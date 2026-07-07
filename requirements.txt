@@ -1,0 +1,60 @@
+# ============================================================
+#  traffic-sign-detection  —  requirements.txt
+#  Install:  pip install -r requirements.txt
+# ============================================================
+
+# ---------------------------
+# Core Deep Learning
+# ---------------------------
+torch>=2.2.0
+torchvision>=0.17.0
+ultralytics>=8.2.0          # YOLOv8 / YOLO11
+
+# ---------------------------
+# Classical CV
+# ---------------------------
+opencv-python>=4.9.0.80
+Pillow>=10.2.0
+
+# ---------------------------
+# Data Science & EDA
+# ---------------------------
+numpy>=1.26.4
+pandas>=2.2.1
+matplotlib>=3.8.3
+seaborn>=0.13.2
+scikit-learn>=1.4.1
+
+# ---------------------------
+# Annotation & Format Tools
+# ---------------------------
+pycocotools>=2.0.7
+
+# ---------------------------
+# Augmentation
+# ---------------------------
+albumentations>=1.4.3
+
+# ---------------------------
+# Experiment Tracking
+# ---------------------------
+wandb>=0.16.6
+# tensorboard>=2.16.2       # Uncomment for TensorBoard
+
+# ---------------------------
+# Demo Application
+# ---------------------------
+streamlit>=1.33.0
+
+# ---------------------------
+# Notebooks
+# ---------------------------
+jupyter>=1.0.0
+ipykernel>=6.29.4
+ipywidgets>=8.1.2
+
+# ---------------------------
+# Utilities
+# ---------------------------
+tqdm>=4.66.2
+pyyaml>=6.0.1

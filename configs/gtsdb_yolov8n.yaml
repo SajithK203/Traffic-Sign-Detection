@@ -1,0 +1,57 @@
+# ============================================================
+#  configs/gtsdb_yolov8n.yaml
+#  Ultralytics YOLO training config for GTSDB (3 super-classes)
+#  Fine-tune YOLOv8n from COCO pretrained weights.
+#
+#  Usage:
+#    python src/train.py --config configs/gtsdb_yolov8n.yaml
+# ============================================================
+
+# --- Model ---
+model: yolov8n.pt          # start from COCO-pretrained nano weights
+
+# --- Dataset paths (relative to project root) ---
+path:  data/processed/gtsdb        # dataset root
+train: train/images
+val:   val/images
+test:  test/images
+
+# --- Classes ---
+nc: 3                       # number of classes
+names:
+  0: prohibitory            # red signs  (stop, speed limits, no-entry …)
+  1: danger                 # warning triangles (road works, slippery …)
+  2: mandatory              # blue mandatory signs (roundabout, direction …)
+
+# --- Hyperparameters ---
+epochs:       50
+imgsz:        640           # input resolution — try 800 for small signs
+batch:        16            # reduce to 8 if GPU OOM
+optimizer:    AdamW
+lr0:          0.001         # initial learning rate
+lrf:          0.01          # final LR = lr0 * lrf
+momentum:     0.937
+weight_decay: 0.0005
+warmup_epochs: 3
+patience:     10            # early stopping patience (epochs without improvement)
+
+# --- Augmentation (training only) ---
+# NOTE: horizontal flip is DISABLED — direction signs are asymmetric
+hsv_h: 0.015               # hue jitter
+hsv_s: 0.7                 # saturation jitter
+hsv_v: 0.4                 # brightness jitter
+degrees: 15.0              # rotation ±15°
+translate: 0.1
+scale: 0.5
+shear: 0.0
+flipud: 0.0
+fliplr: 0.0                # ← MUST stay 0 for traffic signs
+mosaic: 1.0
+mixup: 0.0
+
+# --- Experiment tracking ---
+project: runs/train
+name:    gtsdb_yolov8n_v1   # increment for each run
+save:    true
+save_period: 10             # save checkpoint every N epochs
+plots:   true               # generate PR curve, confusion matrix, etc.

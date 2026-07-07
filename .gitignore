@@ -1,0 +1,89 @@
+# ============================================================
+#  traffic-sign-detection  —  .gitignore
+# ============================================================
+
+# ---------------------------
+# Raw datasets (NEVER commit)
+# ---------------------------
+data/raw/
+data/processed/
+*.zip
+*.tar.gz
+*.tar
+*.7z
+
+# ---------------------------
+# Model weights & checkpoints
+# ---------------------------
+results/checkpoints/
+*.pt
+*.pth
+*.onnx
+*.torchscript
+*.engine
+*.tflite
+runs/
+
+# ---------------------------
+# Python environment
+# ---------------------------
+venv/
+env/
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+*.whl
+*.so
+
+# ---------------------------
+# Jupyter
+# ---------------------------
+.ipynb_checkpoints/
+
+# ---------------------------
+# Experiment tracking
+# ---------------------------
+wandb/
+mlruns/
+lightning_logs/
+tensorboard_logs/
+*.tfevents.*
+
+# ---------------------------
+# Large output files
+# ---------------------------
+results/qualitative_examples/*.mp4
+results/qualitative_examples/*.avi
+*.mp4
+*.avi
+
+# ---------------------------
+# IDE / Editor
+# ---------------------------
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ---------------------------
+# OS
+# ---------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# ---------------------------
+# Misc
+# ---------------------------
+*.log
+*.tmp
+*.bak
+*.swp
+.env
