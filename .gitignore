@@ -6,7 +6,14 @@
 # Raw datasets (NEVER commit)
 # ---------------------------
 data/raw/
-data/processed/
+
+# Processed images are too large for GitHub (~1.5 GB) — share via Google Drive
+# Label files (.txt), split summary, and verify images ARE committed (small)
+data/processed/**/*.jpg
+data/processed/**/*.png
+data/processed/**/*.ppm
+
+# Archive formats
 *.zip
 *.tar.gz
 *.tar

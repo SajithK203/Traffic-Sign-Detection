@@ -21,11 +21,11 @@
 
 | Task | Owner | Status |
 |---|---|---|
-| Create GitHub repo & skeleton structure | All | ☐ |
+| Create GitHub repo & skeleton structure | All | ✅ Done — repo at https://github.com/SajithK203/Traffic-Sign-Detection |
 | Register topic with IIC | All | ☐ |
 | Assign roles | All | ☐ |
-| Set up virtual environment & requirements.txt | A | ☐ |
-| Begin GTSDB download | A | ☐ |
+| Set up virtual environment & requirements.txt | A | ☐ Pending per-machine setup |
+| Download GTSDB dataset (TrainIJCNN2013 + TestIJCNN2013) | A | ✅ Done — 600 train .ppm images confirmed |
 
 ---
 
@@ -47,9 +47,10 @@
 
 | Task | Owner | Status |
 |---|---|---|
-| GTSDB annotation format conversion (YOLO txt) | A | ☐ |
-| Visual verification of converted boxes | A, B | ☐ |
-| EDA notebook (class distribution, size histogram) | A | ☐ |
+| GTSDB annotation conversion (gt.txt -> YOLO .txt format) | A | ✅ Done — 506 images converted, .ppm -> .jpg via convert_gtsdb.py |
+| 70/15/15 stratified train/val/test split | A | ✅ Done — train:365, val:80, test:81 via split_dataset.py |
+| Visual verification of converted boxes (5 verify images) | A | ✅ Done — inspect data/processed/gtsdb/all/verify_*.jpg |
+| EDA notebook (class distribution, size histogram) | A | ☐ In Progress — run notebooks/01_eda.ipynb |
 | Classical CV baseline: HSV thresholding | B | ☐ |
 | Classical CV baseline: Hough/contour shape detect | B | ☐ |
 
