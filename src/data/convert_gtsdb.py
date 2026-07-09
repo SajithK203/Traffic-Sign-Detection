@@ -164,7 +164,7 @@ def convert_gtsdb(
 
         converted += 1
 
-    print(f"\n✅ Done. Converted: {converted} | Skipped: {skipped}")
+    print(f"\nDone. Converted: {converted} | Skipped: {skipped}")
     print(f"   Labels → {labels_dir}")
     print(f"   Images → {images_dir}")
 
