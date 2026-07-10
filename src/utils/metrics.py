@@ -5,6 +5,7 @@ Evaluation metric helpers:
   - IoU calculation
   - Precision/Recall/AP computation
   - Classical baseline evaluation loop
+  - Zero-shot YOLO baseline evaluation loop
 """
 
 from pathlib import Path
@@ -115,17 +116,128 @@ def evaluate_classical_baseline(test_dir) -> dict:
                         y2 = int((yc + bh / 2) * h)
                         all_gts.append({"box": [x1, y1, x2, y2], "img_id": img_id})
 
+        # Classical detector: no confidence score — assign 1.0 uniformly.
+        # This means the PR curve degenerates to a single point; AP equals
+        # precision-at-that-point.  That is expected behaviour for a
+        # threshold-based (non-ranking) detector.
         for (x1, y1, x2, y2, _) in detector.detect(img):
             all_dets.append({"box": [x1, y1, x2, y2], "conf": 1.0, "img_id": img_id})
 
-    _, _, ap = compute_precision_recall(all_dets, all_gts)
-    n_tp = sum(
-        1 for d in all_dets
-        if any(compute_iou(d["box"], g["box"]) >= 0.5
-               for g in all_gts if g["img_id"] == d["img_id"])
-    )
-    precision = n_tp / max(len(all_dets), 1)
-    recall    = n_tp / max(len(all_gts), 1)
-    f1        = 2 * precision * recall / max(precision + recall, 1e-10)
-    return {"precision": precision, "recall": recall, "f1": f1, "ap": ap,
+    precisions, recalls, ap = compute_precision_recall(all_dets, all_gts)
+
+    # Derive scalar precision / recall from the PR curve so that the
+    # matched-GT accounting is consistent with compute_precision_recall.
+    if len(precisions) > 0:
+        precision = float(precisions[-1])
+        recall    = float(recalls[-1])
+    else:
+        precision = 0.0
+        recall    = 0.0
+
+    f1 = 2 * precision * recall / max(precision + recall, 1e-10)
+    return {"model": "classical",
+            "precision": precision, "recall": recall, "f1": f1, "ap": float(ap),
             "n_detections": len(all_dets), "n_ground_truths": len(all_gts)}
+
+
+def evaluate_zeroshot_baseline(
+    test_dir,
+    conf_threshold: float = 0.10,
+    iou_threshold:  float = 0.45,
+    model_name:     str   = "yolov8n.pt",
+) -> dict:
+    """Run a COCO-pretrained YOLOv8 model zero-shot on test images.
+
+    No fine-tuning is performed.  Boxes are matched against ground-truth
+    using IoU >= 0.5 (class-agnostic — any COCO detection that overlaps a
+    sign counts).
+
+    Args:
+        test_dir:       Path to the split directory (images/ + labels/).
+        conf_threshold: Minimum YOLO confidence to keep a detection.
+        iou_threshold:  NMS IoU threshold passed to YOLO.
+        model_name:     Ultralytics model weights name / path.
+
+    Returns:
+        dict with keys: model, conf_threshold, precision, recall,
+                        f1, ap, n_detections, n_ground_truths.
+    """
+    try:
+        from ultralytics import YOLO
+    except ImportError:
+        raise ImportError(
+            "ultralytics is not installed.  Run: pip install ultralytics"
+        )
+
+    test_dir   = Path(test_dir)
+    images_dir = test_dir / "images"
+    labels_dir = test_dir / "labels"
+
+    model = YOLO(model_name)
+
+    all_dets, all_gts = [], []
+    img_paths = sorted(
+        p for p in images_dir.iterdir()
+        if p.suffix.lower() in {".jpg", ".jpeg", ".png", ".ppm"}
+    )
+
+    print(f"[INFO] Zero-shot inference on {len(img_paths)} images "
+          f"(conf>={conf_threshold}, nms_iou={iou_threshold}) ...")
+
+    for img_path in img_paths:
+        img = cv2.imread(str(img_path))
+        if img is None:
+            continue
+        h, w   = img.shape[:2]
+        img_id = img_path.stem
+
+        # Ground truth
+        lbl_path = labels_dir / f"{img_id}.txt"
+        if lbl_path.exists():
+            with open(lbl_path) as f:
+                for line in f:
+                    parts = line.strip().split()
+                    if len(parts) == 5:
+                        _, xc, yc, bw, bh = map(float, parts)
+                        x1 = int((xc - bw / 2) * w)
+                        y1 = int((yc - bh / 2) * h)
+                        x2 = int((xc + bw / 2) * w)
+                        y2 = int((yc + bh / 2) * h)
+                        all_gts.append({"box": [x1, y1, x2, y2],
+                                        "img_id": img_id})
+
+        # Predictions — keep real confidence scores for proper PR ranking
+        results = model.predict(img, conf=conf_threshold,
+                                iou=iou_threshold, verbose=False)
+        boxes = results[0].boxes
+        if boxes is not None:
+            for box in boxes:
+                x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+                conf = float(box.conf[0])
+                all_dets.append({"box": [x1, y1, x2, y2],
+                                 "conf": conf, "img_id": img_id})
+
+    precisions, recalls, ap = compute_precision_recall(
+        all_dets, all_gts, iou_threshold=0.5
+    )
+
+    # Scalar P/R from the last point of the ranked PR curve — correctly
+    # enforces one-match-per-GT semantics (no double-counting).
+    if len(precisions) > 0:
+        precision = float(precisions[-1])
+        recall    = float(recalls[-1])
+    else:
+        precision = 0.0
+        recall    = 0.0
+
+    f1 = 2 * precision * recall / max(precision + recall, 1e-10)
+    return {
+        "model":           f"zero-shot-{model_name}",
+        "conf_threshold":  conf_threshold,
+        "precision":       precision,
+        "recall":          recall,
+        "f1":              f1,
+        "ap":              float(ap),
+        "n_detections":    len(all_dets),
+        "n_ground_truths": len(all_gts),
+    }
