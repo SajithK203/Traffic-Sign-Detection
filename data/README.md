@@ -14,21 +14,22 @@
 
 ### Download Steps
 1. Visit: https://benchmark.ini.rub.de/gtsdb_news.html
-2. Download `GTSDB.zip` (~600 MB)
+2. Download `TrainIJCNN2013.zip` (~600 MB)
 3. Extract and place as:
 ```
 data/raw/gtsdb/
-├── TrainIJCNN2013/        # 600 training images (.ppm)
-│   ├── gt.txt             # ground-truth bounding box annotations
-│   └── *.ppm
-└── TestIJCNN2013/         # 300 test images (.ppm)
-    └── *.ppm
+└── TrainIJCNN2013/
+    ├── 00000.ppm
+    ├── ...
+    ├── 00599.ppm
+    └── gt.txt
 ```
-4. Run the converter:
+4. **Run the one-command setup** (auto-detects `.ppm`, converts, and splits):
 ```bash
-python src/data/convert_gtsdb.py
+python src/data/setup_dataset.py
 ```
-Expected output in `data/processed/gtsdb/` (YOLO txt format).
+
+> Full instructions: [`docs/SETUP_IMAGES.md`](./SETUP_IMAGES.md)
 
 ---
 
@@ -101,7 +102,7 @@ Class mappings are stored in `configs/classes_gtsdb.yaml`.
 
 | Dataset | Train | Val | Test |
 |---|---|---|---|
-| GTSDB | 600 imgs (official) | 50 from train | 300 imgs (official) |
+| GTSDB (this project) | 365 imgs | 80 imgs | 81 imgs |
 | GTSRB | 39,209 (official) | 10% from train | 12,630 (official) |
 
 **Rule**: Never touch the test split during training or hyperparameter tuning. Run final evaluation on test exactly once per model variant.
