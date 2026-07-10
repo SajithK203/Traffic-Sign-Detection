@@ -94,3 +94,7 @@ ehthumbs.db
 *.bak
 *.swp
 .env
+
+venv_gpu/
+
+*.cache
