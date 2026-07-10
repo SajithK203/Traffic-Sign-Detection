@@ -96,5 +96,4 @@ ehthumbs.db
 .env
 
 venv_gpu/
-
 *.cache

@@ -1,0 +1,6 @@
+Model,mAP@0.5,mAP@0.5:0.95,Precision,Recall,AP@0.5
+Classical CV Baseline (HSV+Contour),—,—,0.0400,0.1545,0.0087
+"Zero-Shot YOLOv8n (COCO, no fine-tune)",—,—,0.0361,0.2000,0.0070
+"YOLOv8n (fine-tuned, with aug)",0.9547,0.7333,0.9186,0.9104,—
+"YOLOv8n (fine-tuned, no aug)",0.8481,0.6430,0.8767,0.7412,—
+"YOLOv8s (fine-tuned, with aug)",0.9709,0.7596,0.9646,0.9061,—
