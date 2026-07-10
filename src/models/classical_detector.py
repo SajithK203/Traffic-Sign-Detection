@@ -23,7 +23,9 @@ Fixes applied:
     - Blue: S_low raised to 120, sky rows (top ~30 % of frame) excluded
     - Yellow: S_low raised to 120, V_low raised to 120 (bright saturated only)
     - Red:   S_low raised to 120 (already reasonable, noise was sky-reflected)
-    - min_area raised to 800 px² (sign bbox data shows most signs > 20×20 px)
+    - min_area set to 600 px² — balances small-sign recall vs. noise rejection
+      (200 was too low: produced 425 FP detections; 800 missed small signs)
+    - min_circularity raised to 0.30 — signs are compact; rejects elongated noise
     - Circularity / solidity filter added (signs are compact shapes)
     - IoU-NMS added to remove duplicate boxes from overlapping contours
 """
@@ -57,15 +59,16 @@ class ClassicalConfig:
     yellow_upper: list = field(default_factory=lambda: [35,  255, 255])
 
     # ── Geometry filters ────────────────────────────────────────────────
-    # bbox data: signs are 15-130 px wide/tall
-    min_area: int   = 200       # px² — allow smaller signs
-    max_area: int   = 40_000    # px² — remove large non-sign regions
+    # GTSDB bbox analysis: smallest annotated signs ~20×20 px = 400 px²
+    # min_area=600 rejects noise blobs while keeping most real signs
+    min_area: int   = 600       # px² — balanced: rejects noise, keeps signs ≥25×25 px
+    max_area: int   = 50_000    # px² — allow larger signs closer to camera
 
     min_aspect: float = 0.3     # signs are roughly square
     max_aspect: float = 3.0
 
-    # Circularity: 4π·area / perimeter²
-    min_circularity: float = 0.20
+    # Circularity: 4π·area / perimeter² (circle=1.0, square≈0.79, elongated blob<0.3)
+    min_circularity: float = 0.30  # raised from 0.20 — signs are compact shapes
 
     padding: int = 3            # extra pixels around detected contour box
     morph_kernel: int = 5       # structuring element size
