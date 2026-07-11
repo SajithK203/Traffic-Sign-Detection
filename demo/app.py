@@ -181,55 +181,77 @@ with tab_video:
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_out:
                         tmp_out_path = tmp_out.name
 
-                    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+                    # Try H.264 first (best browser compatibility), fall back to mp4v
+                    fourcc = cv2.VideoWriter_fourcc(*"avc1")
                     writer = cv2.VideoWriter(tmp_out_path, fourcc, fps, (width, height))
+                    if not writer.isOpened():
+                        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+                        writer = cv2.VideoWriter(tmp_out_path, fourcc, fps, (width, height))
 
-                    progress_bar = st.progress(0, text="Processing frames…")
-                    preview_slot = st.empty()
-
-                    frame_idx = 0
+                    progress_bar     = st.progress(0, text="Processing frames…")
+                    status_text      = st.empty()
+                    frame_idx        = 0
                     sign_count_total = 0
+                    preview_frame    = None
 
                     while cap.isOpened():
                         ret, frame = cap.read()
                         if not ret:
                             break
 
-                        results   = wrapper.predict(source=frame, conf=conf_threshold, iou=iou_threshold)
+                        results   = wrapper.predict(source=frame, conf=conf_threshold,
+                                                    iou=iou_threshold, verbose=False)
                         annotated = results[0].plot()
                         writer.write(annotated)
 
-                        # Count detections
                         n = len(results[0].boxes) if results[0].boxes is not None else 0
                         sign_count_total += n
 
-                        # Update preview every 10 frames
-                        if frame_idx % 10 == 0:
-                            preview_rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
-                            preview_slot.image(preview_rgb, caption=f"Frame {frame_idx}/{total_frames}", use_column_width=True)
+                        # Store last annotated frame for preview after processing
+                        if frame_idx % max(total_frames // 5, 1) == 0:
+                            preview_frame = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
 
                         frame_idx += 1
-                        progress_bar.progress(
-                            min(frame_idx / max(total_frames, 1), 1.0),
-                            text=f"Processing frame {frame_idx}/{total_frames}…"
-                        )
+                        # Update progress bar only every 5 frames to avoid UI slowdown
+                        if frame_idx % 5 == 0 or frame_idx == total_frames:
+                            progress_bar.progress(
+                                min(frame_idx / max(total_frames, 1), 1.0),
+                                text=f"Processing frame {frame_idx}/{total_frames}…"
+                            )
+                            status_text.markdown(
+                                f"⚡ Processed **{frame_idx}** / {total_frames} frames  |  "
+                                f"Signs detected so far: **{sign_count_total}**"
+                            )
 
                     cap.release()
                     writer.release()
-                    progress_bar.progress(1.0, text="✅ Done!")
+                    progress_bar.progress(1.0, text="✅ Processing complete!")
+                    status_text.empty()
+
 
                     st.success(
-                        f"Processed **{frame_idx}** frames — detected signs in **{sign_count_total}** frame detections total."
+                        f"✅ Done! Processed **{frame_idx}** frames — "
+                        f"**{sign_count_total}** sign detections across the video."
                     )
 
-                    # Offer download of annotated video
-                    with open(tmp_out_path, "rb") as f:
-                        st.download_button(
-                            "⬇️ Download Annotated Video",
-                            data=f.read(),
-                            file_name="annotated_traffic_video.mp4",
-                            mime="video/mp4",
-                        )
+                    # Show a sample annotated frame
+                    if preview_frame is not None:
+                        st.markdown("**Sample annotated frame:**")
+                        st.image(preview_frame, use_column_width=True)
+
+                    # Play the video inline in the browser
+                    st.markdown("**▶️ Annotated Video Preview:**")
+                    with open(tmp_out_path, "rb") as vf:
+                        video_bytes = vf.read()
+                    st.video(video_bytes)
+
+                    # Also offer a download button
+                    st.download_button(
+                        "⬇️ Download Annotated Video",
+                        data=video_bytes,
+                        file_name="annotated_traffic_video.mp4",
+                        mime="video/mp4",
+                    )
 
 # ------------------------------------------------------------------
 # Run detection when an image is loaded
