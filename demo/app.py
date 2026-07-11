@@ -5,14 +5,16 @@ Run:
     venv_gpu\\Scripts\\streamlit run demo/app.py
 
 Features:
-  - Upload an image OR click a sample image to load instantly
+  - Upload an image OR a video, OR click a sample image to load instantly
   - Choose between Classical CV baseline, any Fine-Tuned YOLO variant, or side-by-side comparison
+  - Video mode: processes frame by frame and lets you download the annotated video
   - Show confidence scores and class names in a results table
   - Download annotated image
 """
 
 import io
 import sys
+import tempfile
 from pathlib import Path
 
 import cv2
@@ -93,18 +95,21 @@ def load_classical():
     return ClassicalDetector()
 
 # ------------------------------------------------------------------
-# Sample image loader
+# Input — Image or Video tabs
 # ------------------------------------------------------------------
 
-SAMPLE_DIR = Path(__file__).resolve().parent / "sample_media"
+SAMPLE_DIR  = Path(__file__).resolve().parent / "sample_media"
 sample_files = sorted(SAMPLE_DIR.glob("*.jpg"))
 
-st.markdown("### 📂 Load an Image")
+CLASS_NAMES = {0: "Prohibitory 🔴", 1: "Danger 🟡", 2: "Mandatory 🔵"}
 
-tab_upload, tab_sample = st.tabs(["📤 Upload Your Own", "🖼️ Use a Sample Image"])
+st.markdown("### 📂 Load an Image or Video")
+tab_upload, tab_sample, tab_video = st.tabs(["📤 Upload Image", "🖼️ Sample Image", "🎬 Upload Video"])
 
-img_bgr = None
+img_bgr    = None
+video_path = None
 
+# ── Image upload ──────────────────────────────────────────────────
 with tab_upload:
     uploaded_file = st.file_uploader(
         "Upload a traffic scene image",
@@ -115,6 +120,7 @@ with tab_upload:
         file_bytes = np.frombuffer(uploaded_file.read(), np.uint8)
         img_bgr = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
 
+# ── Sample image buttons ──────────────────────────────────────────
 with tab_sample:
     if sample_files:
         cols = st.columns(len(sample_files))
@@ -126,14 +132,111 @@ with tab_sample:
     else:
         st.info("No sample images found in `demo/sample_media/`. Add some `.jpg` files there.")
 
+# ── Video upload ──────────────────────────────────────────────────
+with tab_video:
+    st.info(
+        "Upload a short video clip (MP4 / AVI / MOV). "
+        "Each frame will be processed by the YOLO model and an annotated video will be generated for download."
+    )
+    uploaded_video = st.file_uploader(
+        "Upload a traffic scene video",
+        type=["mp4", "avi", "mov"],
+        label_visibility="collapsed",
+    )
+
+    if uploaded_video is not None:
+        selected = MODEL_OPTIONS[model_choice]
+        if selected in ("classical", "compare"):
+            st.warning("Video mode only supports YOLO models. Please select a YOLO model from the sidebar.")
+        else:
+            ckpt_path = Path(selected)
+            if not ckpt_path.exists():
+                st.error(f"Checkpoint not found at `{ckpt_path}`. Run the training notebook first.")
+            else:
+                # Save uploaded video to a temp file so OpenCV can read it
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_in:
+                    tmp_in.write(uploaded_video.read())
+                    tmp_in_path = tmp_in.name
+
+                cap = cv2.VideoCapture(tmp_in_path)
+                total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                fps          = cap.get(cv2.CAP_PROP_FPS) or 25.0
+                width        = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                height       = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+                st.markdown(
+                    f"**Video info:** {total_frames} frames · {fps:.1f} fps · {width}×{height} px"
+                )
+
+                # Warn if video is very long
+                if total_frames > 300:
+                    st.warning(
+                        f"⚠️ This video has {total_frames} frames (~{total_frames/fps:.0f}s). "
+                        "Processing may take a while. Consider trimming to under 10 seconds for the demo."
+                    )
+
+                if st.button("▶️ Process Video", type="primary"):
+                    wrapper = load_yolo(str(ckpt_path))
+
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_out:
+                        tmp_out_path = tmp_out.name
+
+                    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+                    writer = cv2.VideoWriter(tmp_out_path, fourcc, fps, (width, height))
+
+                    progress_bar = st.progress(0, text="Processing frames…")
+                    preview_slot = st.empty()
+
+                    frame_idx = 0
+                    sign_count_total = 0
+
+                    while cap.isOpened():
+                        ret, frame = cap.read()
+                        if not ret:
+                            break
+
+                        results   = wrapper.predict(source=frame, conf=conf_threshold, iou=iou_threshold)
+                        annotated = results[0].plot()
+                        writer.write(annotated)
+
+                        # Count detections
+                        n = len(results[0].boxes) if results[0].boxes is not None else 0
+                        sign_count_total += n
+
+                        # Update preview every 10 frames
+                        if frame_idx % 10 == 0:
+                            preview_rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
+                            preview_slot.image(preview_rgb, caption=f"Frame {frame_idx}/{total_frames}", use_column_width=True)
+
+                        frame_idx += 1
+                        progress_bar.progress(
+                            min(frame_idx / max(total_frames, 1), 1.0),
+                            text=f"Processing frame {frame_idx}/{total_frames}…"
+                        )
+
+                    cap.release()
+                    writer.release()
+                    progress_bar.progress(1.0, text="✅ Done!")
+
+                    st.success(
+                        f"Processed **{frame_idx}** frames — detected signs in **{sign_count_total}** frame detections total."
+                    )
+
+                    # Offer download of annotated video
+                    with open(tmp_out_path, "rb") as f:
+                        st.download_button(
+                            "⬇️ Download Annotated Video",
+                            data=f.read(),
+                            file_name="annotated_traffic_video.mp4",
+                            mime="video/mp4",
+                        )
+
 # ------------------------------------------------------------------
 # Run detection when an image is loaded
 # ------------------------------------------------------------------
 
-CLASS_NAMES = {0: "Prohibitory 🔴", 1: "Danger 🟡", 2: "Mandatory 🔵"}
-
 if img_bgr is not None:
-    img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+    img_rgb  = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
     selected = MODEL_OPTIONS[model_choice]
 
     st.markdown("---")
@@ -150,7 +253,7 @@ if img_bgr is not None:
         with col2:
             st.markdown("**🔬 Classical CV Baseline**")
             with st.spinner("Running classical detector..."):
-                det = load_classical()
+                det        = load_classical()
                 detections = det.detect(img_bgr)
                 annotated_classical = det.visualize(img_bgr, detections)
                 st.image(cv2.cvtColor(annotated_classical, cv2.COLOR_BGR2RGB), use_column_width=True)
@@ -176,19 +279,22 @@ if img_bgr is not None:
         with col2:
             st.subheader("🔍 Classical CV Detection")
             with st.spinner("Running classical detector..."):
-                det = load_classical()
+                det        = load_classical()
                 detections = det.detect(img_bgr)
-                annotated = det.visualize(img_bgr, detections)
+                annotated  = det.visualize(img_bgr, detections)
                 st.image(cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB), use_column_width=True)
 
             if detections:
                 st.success(f"Found **{len(detections)}** candidate region(s)")
-                rows = [{"Region": i+1, "BBox (x1,y1,x2,y2)": f"({d[0]}, {d[1]}, {d[2]}, {d[3]})"} for i, d in enumerate(detections)]
+                rows = [
+                    {"Region": i + 1, "BBox (x1,y1,x2,y2)": f"({d[0]}, {d[1]}, {d[2]}, {d[3]})"}
+                    for i, d in enumerate(detections)
+                ]
                 st.dataframe(rows, use_container_width=True)
             else:
                 st.warning("No signs detected. Try lowering the Confidence Threshold.")
 
-    # ── YOLO MODE ─────────────────────────────────────────────────
+    # ── YOLO IMAGE MODE ───────────────────────────────────────────
     else:
         ckpt_path = Path(selected)
         col1, col2 = st.columns(2)
@@ -201,8 +307,8 @@ if img_bgr is not None:
                 st.error(f"Checkpoint not found at `{ckpt_path}`. Run the training notebook first.")
             else:
                 with st.spinner("Running YOLO detection..."):
-                    wrapper = load_yolo(str(ckpt_path))
-                    results = wrapper.predict(source=img_bgr, conf=conf_threshold, iou=iou_threshold)
+                    wrapper      = load_yolo(str(ckpt_path))
+                    results      = wrapper.predict(source=img_bgr, conf=conf_threshold, iou=iou_threshold)
                     annotated_bgr = results[0].plot()
                     st.image(cv2.cvtColor(annotated_bgr, cv2.COLOR_BGR2RGB), use_column_width=True)
 
@@ -211,19 +317,19 @@ if img_bgr is not None:
                     st.success(f"Found **{len(boxes)}** sign(s)")
                     rows = []
                     for b in boxes:
-                        cls_id = int(b.cls[0])
-                        conf   = float(b.conf[0])
+                        cls_id     = int(b.cls[0])
+                        conf_score = float(b.conf[0])
                         x1, y1, x2, y2 = [int(v) for v in b.xyxy[0]]
                         rows.append({
                             "Class": CLASS_NAMES.get(cls_id, str(cls_id)),
-                            "Confidence": f"{conf:.1%}",
+                            "Confidence": f"{conf_score:.1%}",
                             "BBox (x1,y1,x2,y2)": f"({x1}, {y1}, {x2}, {y2})",
                         })
                     st.dataframe(rows, use_container_width=True)
                 else:
                     st.warning("No signs detected. Try lowering the Confidence Threshold slider.")
 
-                # Download button
+                # Download annotated image
                 annotated_pil = Image.fromarray(cv2.cvtColor(annotated_bgr, cv2.COLOR_BGR2RGB))
                 buf = io.BytesIO()
                 annotated_pil.save(buf, format="PNG")
@@ -234,8 +340,8 @@ if img_bgr is not None:
                     mime="image/png",
                 )
 
-else:
-    st.info("👆 Upload an image above, or click a sample image to get started.")
+elif video_path is None and uploaded_video is None:
+    st.info("👆 Select a tab above to upload an image, choose a sample, or upload a video.")
 
 # ------------------------------------------------------------------
 # Footer
