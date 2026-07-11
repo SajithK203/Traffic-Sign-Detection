@@ -80,8 +80,8 @@ See [`data/README.md`](data/README.md) for download instructions.
 
 ### 1. Clone
 ```bash
-git clone https://github.com/<your-org>/traffic-sign-detection.git
-cd traffic-sign-detection
+git clone https://github.com/SajithK203/Traffic-Sign-Detection.git
+cd Traffic-Sign-Detection
 ```
 
 ### 2. Virtual Environment
@@ -139,21 +139,33 @@ python src/inference.py --weights results/checkpoints/best.pt --source path/to/i
 
 ### Demo App
 ```bash
-streamlit run demo/app.py
+# Install streamlit if not already installed
+venv_gpu\Scripts\python -m pip install streamlit
+
+# Run the interactive demo
+venv_gpu\Scripts\streamlit run demo/app.py
 ```
+
+Open http://localhost:8501 in your browser. Sample images are provided in `demo/sample_media/`.
 
 ---
 
 ## 📊 Results Summary
 
-> *(Updated after experiments — see `results/metrics/` for full run logs)*
+> All models evaluated on the held-out GTSDB test split (81 images, 3 super-classes). See `results/metrics/` for full logs.
 
-| Model | mAP@0.5 | Precision | Recall | FPS |
+| Model | mAP@0.5 | mAP@0.5:0.95 | Precision | Recall |
 |---|---|---|---|---|
-| Classical CV Baseline | — | — | — | — |
-| Zero-Shot YOLOv8n (COCO) | — | — | — | — |
-| Fine-Tuned YOLOv8n | — | — | — | — |
-| Fine-Tuned YOLOv8s | — | — | — | — |
+| Classical CV Baseline (HSV + Contour) | — | — | 4.0% | 15.5% |
+| Zero-Shot YOLOv8n (COCO, no fine-tune) | — | — | 3.6% | 20.0% |
+| **Fine-Tuned YOLOv8n** (with aug) | **95.5%** | 73.3% | 91.9% | 91.0% |
+| Fine-Tuned YOLOv8n (no aug — ablation) | 84.8% | 64.3% | 87.7% | 74.1% |
+| **Fine-Tuned YOLOv8s** (with aug — best) | **97.1%** | **76.0%** | **96.5%** | **90.6%** |
+
+### Key Findings
+- 🏆 Fine-tuning YOLOv8s achieves **97.1% mAP@0.5** — a ~24× improvement over the classical baseline
+- ✅ Data augmentation is critical: removing it drops mAP by **10.7 percentage points**
+- ✅ The larger YOLOv8s model outperforms YOLOv8n by **+1.6% mAP** at the cost of ~4× more parameters
 
 ---
 
