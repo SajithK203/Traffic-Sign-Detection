@@ -2,15 +2,16 @@
 app.py  —  Streamlit demo for traffic sign detection.
 
 Run:
-    streamlit run demo/app.py
+    venv_gpu\\Scripts\\streamlit run demo/app.py
 
 Features:
-  - Upload an image → detect traffic signs and display annotated result
-  - Choose between Classical CV baseline or Fine-Tuned YOLO
-  - Show confidence scores and class names
+  - Upload an image OR click a sample image to load instantly
+  - Choose between Classical CV baseline, any Fine-Tuned YOLO variant, or side-by-side comparison
+  - Show confidence scores and class names in a results table
   - Download annotated image
 """
 
+import io
 import sys
 from pathlib import Path
 
@@ -26,7 +27,6 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from src.models.classical_detector import ClassicalDetector
 from src.models.yolo_wrapper import YOLOWrapper
 
-
 # ------------------------------------------------------------------
 # Page configuration
 # ------------------------------------------------------------------
@@ -39,7 +39,7 @@ st.set_page_config(
 )
 
 st.title("🚦 Traffic Sign Detection")
-st.caption("CO543/CO5430 — Computer Vision Project Demo")
+st.caption("CO543/CO5430 — Computer Vision Project Demo | Group 17")
 
 # ------------------------------------------------------------------
 # Sidebar — model selection & settings
@@ -47,33 +47,44 @@ st.caption("CO543/CO5430 — Computer Vision Project Demo")
 
 st.sidebar.header("⚙️ Settings")
 
-model_choice = st.sidebar.radio(
+MODEL_OPTIONS = {
+    "🏆 Fine-Tuned YOLOv8s (Best — 97.1% mAP)": str(PROJECT_ROOT / "results/checkpoints/gtsdb_yolov8s_v1_best.pt"),
+    "🔵 Fine-Tuned YOLOv8n (95.5% mAP)":        str(PROJECT_ROOT / "results/checkpoints/gtsdb_yolov8n_v1_best.pt"),
+    "⚗️ Fine-Tuned YOLOv8n No Aug (84.8% mAP)": str(PROJECT_ROOT / "results/checkpoints/gtsdb_yolov8n_noaug_v1_best.pt"),
+    "🔬 Classical CV Baseline (HSV + Contour)":  "classical",
+    "🆚 Side-by-Side: Classical vs YOLOv8s":     "compare",
+}
+
+model_choice = st.sidebar.selectbox(
     "Detection Model",
-    options=["Fine-Tuned YOLOv8 (Recommended)", "Classical CV Baseline (HSV + Contour)"],
+    options=list(MODEL_OPTIONS.keys()),
 )
 
-conf_threshold = st.sidebar.slider("Confidence Threshold", 0.1, 0.9, 0.25, 0.05)
-iou_threshold  = st.sidebar.slider("NMS IoU Threshold",    0.1, 0.9, 0.45, 0.05)
-
-yolo_weights_path = st.sidebar.text_input(
-    "YOLO Checkpoint Path",
-    value="results/checkpoints/best.pt",
-    help="Path to your fine-tuned YOLO .pt checkpoint.",
-)
+conf_threshold = st.sidebar.slider("Confidence Threshold", 0.05, 0.9, 0.20, 0.05)
+iou_threshold  = st.sidebar.slider("NMS IoU Threshold",    0.1,  0.9, 0.45, 0.05)
 
 st.sidebar.markdown("---")
 st.sidebar.markdown(
     "**Class Labels**\n"
-    "- 🔴 Prohibitory (red)\n"
-    "- 🔵 Mandatory (blue)\n"
-    "- 🟡 Danger/Warning (yellow)"
+    "- 🔴 Prohibitory (red circle signs)\n"
+    "- 🟡 Danger (red triangle signs)\n"
+    "- 🔵 Mandatory (blue circle signs)"
+)
+st.sidebar.markdown("---")
+st.sidebar.markdown(
+    "**Model Performance**\n"
+    "| Model | mAP@0.5 |\n"
+    "|---|---|\n"
+    "| Classical CV | — |\n"
+    "| YOLOv8n | 95.5% |\n"
+    "| YOLOv8s | **97.1%** |"
 )
 
 # ------------------------------------------------------------------
 # Model loading (cached)
 # ------------------------------------------------------------------
 
-@st.cache_resource(show_spinner="Loading model...")
+@st.cache_resource(show_spinner="Loading YOLO model...")
 def load_yolo(weights: str):
     return YOLOWrapper(model=weights)
 
@@ -82,97 +93,152 @@ def load_classical():
     return ClassicalDetector()
 
 # ------------------------------------------------------------------
-# Image upload & inference
+# Sample image loader
 # ------------------------------------------------------------------
 
-uploaded_file = st.file_uploader(
-    "Upload a traffic scene image",
-    type=["jpg", "jpeg", "png", "ppm"],
-)
+SAMPLE_DIR = Path(__file__).resolve().parent / "sample_media"
+sample_files = sorted(SAMPLE_DIR.glob("*.jpg"))
 
-if uploaded_file is not None:
-    # Decode uploaded image
-    file_bytes = np.frombuffer(uploaded_file.read(), np.uint8)
-    img_bgr    = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
-    img_rgb    = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+st.markdown("### 📂 Load an Image")
 
-    col1, col2 = st.columns(2)
+tab_upload, tab_sample = st.tabs(["📤 Upload Your Own", "🖼️ Use a Sample Image"])
 
-    with col1:
-        st.subheader("📷 Input Image")
-        st.image(img_rgb, use_column_width=True)
+img_bgr = None
 
-    with col2:
-        st.subheader("🔍 Detection Result")
+with tab_upload:
+    uploaded_file = st.file_uploader(
+        "Upload a traffic scene image",
+        type=["jpg", "jpeg", "png", "ppm"],
+        label_visibility="collapsed",
+    )
+    if uploaded_file is not None:
+        file_bytes = np.frombuffer(uploaded_file.read(), np.uint8)
+        img_bgr = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
 
-        with st.spinner("Running detection..."):
+with tab_sample:
+    if sample_files:
+        cols = st.columns(len(sample_files))
+        for i, (col, f) in enumerate(zip(cols, sample_files)):
+            thumb = Image.open(f).resize((160, 120))
+            col.image(thumb, caption=f.stem, use_column_width=True)
+            if col.button(f"Load {f.stem}", key=f"sample_{i}"):
+                img_bgr = cv2.imread(str(f))
+    else:
+        st.info("No sample images found in `demo/sample_media/`. Add some `.jpg` files there.")
 
-            if "Classical" in model_choice:
-                detector   = load_classical()
-                detections = detector.detect(img_bgr)
-                annotated  = detector.visualize(img_bgr, detections)
-                annotated_rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
-                st.image(annotated_rgb, use_column_width=True)
+# ------------------------------------------------------------------
+# Run detection when an image is loaded
+# ------------------------------------------------------------------
+
+CLASS_NAMES = {0: "Prohibitory 🔴", 1: "Danger 🟡", 2: "Mandatory 🔵"}
+
+if img_bgr is not None:
+    img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+    selected = MODEL_OPTIONS[model_choice]
+
+    st.markdown("---")
+
+    # ── SIDE-BY-SIDE COMPARISON MODE ──────────────────────────────
+    if selected == "compare":
+        st.subheader("🆚 Side-by-Side: Classical CV vs Fine-Tuned YOLOv8s")
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.markdown("**📷 Original**")
+            st.image(img_rgb, use_column_width=True)
+
+        with col2:
+            st.markdown("**🔬 Classical CV Baseline**")
+            with st.spinner("Running classical detector..."):
+                det = load_classical()
+                detections = det.detect(img_bgr)
+                annotated_classical = det.visualize(img_bgr, detections)
+                st.image(cv2.cvtColor(annotated_classical, cv2.COLOR_BGR2RGB), use_column_width=True)
+                st.metric("Signs Found", len(detections))
+
+        with col3:
+            ckpt = str(PROJECT_ROOT / "results/checkpoints/gtsdb_yolov8s_v1_best.pt")
+            st.markdown("**🏆 Fine-Tuned YOLOv8s**")
+            with st.spinner("Running YOLO..."):
+                wrapper = load_yolo(ckpt)
+                results = wrapper.predict(source=img_bgr, conf=conf_threshold, iou=iou_threshold)
+                annotated_yolo = results[0].plot()
+                st.image(cv2.cvtColor(annotated_yolo, cv2.COLOR_BGR2RGB), use_column_width=True)
+                n = len(results[0].boxes) if results[0].boxes is not None else 0
+                st.metric("Signs Found", n)
+
+    # ── CLASSICAL CV MODE ──────────────────────────────────────────
+    elif selected == "classical":
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader("📷 Input Image")
+            st.image(img_rgb, use_column_width=True)
+        with col2:
+            st.subheader("🔍 Classical CV Detection")
+            with st.spinner("Running classical detector..."):
+                det = load_classical()
+                detections = det.detect(img_bgr)
+                annotated = det.visualize(img_bgr, detections)
+                st.image(cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB), use_column_width=True)
+
+            if detections:
                 st.success(f"Found **{len(detections)}** candidate region(s)")
+                rows = [{"Region": i+1, "BBox (x1,y1,x2,y2)": f"({d[0]}, {d[1]}, {d[2]}, {d[3]})"} for i, d in enumerate(detections)]
+                st.dataframe(rows, use_container_width=True)
+            else:
+                st.warning("No signs detected. Try lowering the Confidence Threshold.")
 
-                if detections:
-                    class_names = {0: "Prohibitory", 1: "Mandatory", 2: "Danger"}
-                    rows = [
-                        {"Class": class_names.get(d[4], str(d[4])),
-                         "BBox (x1,y1,x2,y2)": f"({d[0]},{d[1]},{d[2]},{d[3]})"}
-                        for d in detections
-                    ]
-                    st.dataframe(rows, use_container_width=True)
-
-            else:  # YOLO
-                weights_path = str(PROJECT_ROOT / yolo_weights_path)
-                if not Path(weights_path).exists():
-                    st.error(
-                        f"Checkpoint not found at `{weights_path}`. "
-                        "Please train the model first (`python src/train.py`) "
-                        "or update the path in the sidebar."
-                    )
-                else:
-                    wrapper = load_yolo(weights_path)
-                    results = wrapper.predict(
-                        source=img_bgr, conf=conf_threshold, iou=iou_threshold
-                    )
+    # ── YOLO MODE ─────────────────────────────────────────────────
+    else:
+        ckpt_path = Path(selected)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader("📷 Input Image")
+            st.image(img_rgb, use_column_width=True)
+        with col2:
+            st.subheader("🔍 YOLO Detection Result")
+            if not ckpt_path.exists():
+                st.error(f"Checkpoint not found at `{ckpt_path}`. Run the training notebook first.")
+            else:
+                with st.spinner("Running YOLO detection..."):
+                    wrapper = load_yolo(str(ckpt_path))
+                    results = wrapper.predict(source=img_bgr, conf=conf_threshold, iou=iou_threshold)
                     annotated_bgr = results[0].plot()
-                    annotated_rgb = cv2.cvtColor(annotated_bgr, cv2.COLOR_BGR2RGB)
-                    st.image(annotated_rgb, use_column_width=True)
+                    st.image(cv2.cvtColor(annotated_bgr, cv2.COLOR_BGR2RGB), use_column_width=True)
 
-                    boxes = results[0].boxes
-                    n = len(boxes) if boxes is not None else 0
-                    st.success(f"Found **{n}** sign(s)")
+                boxes = results[0].boxes
+                if boxes is not None and len(boxes) > 0:
+                    st.success(f"Found **{len(boxes)}** sign(s)")
+                    rows = []
+                    for b in boxes:
+                        cls_id = int(b.cls[0])
+                        conf   = float(b.conf[0])
+                        x1, y1, x2, y2 = [int(v) for v in b.xyxy[0]]
+                        rows.append({
+                            "Class": CLASS_NAMES.get(cls_id, str(cls_id)),
+                            "Confidence": f"{conf:.1%}",
+                            "BBox (x1,y1,x2,y2)": f"({x1}, {y1}, {x2}, {y2})",
+                        })
+                    st.dataframe(rows, use_container_width=True)
+                else:
+                    st.warning("No signs detected. Try lowering the Confidence Threshold slider.")
 
-        # Download button
-        annotated_pil = Image.fromarray(annotated_rgb)
-        import io
-        buf = io.BytesIO()
-        annotated_pil.save(buf, format="PNG")
-        st.download_button(
-            "⬇️ Download Annotated Image",
-            data=buf.getvalue(),
-            file_name="detection_result.png",
-            mime="image/png",
-        )
+                # Download button
+                annotated_pil = Image.fromarray(cv2.cvtColor(annotated_bgr, cv2.COLOR_BGR2RGB))
+                buf = io.BytesIO()
+                annotated_pil.save(buf, format="PNG")
+                st.download_button(
+                    "⬇️ Download Annotated Image",
+                    data=buf.getvalue(),
+                    file_name="detection_result.png",
+                    mime="image/png",
+                )
 
 else:
-    st.info("👆 Upload an image to get started.")
-    st.markdown(
-        """
-        **How to use:**
-        1. Select a detection model in the sidebar
-        2. Upload a traffic scene image (JPG, PNG)
-        3. View detection results and download the annotated image
-
-        **Note**: The Fine-Tuned YOLOv8 model requires a trained checkpoint.
-        Run `python src/train.py --config configs/gtsdb_yolov8n.yaml` first.
-        """
-    )
+    st.info("👆 Upload an image above, or click a sample image to get started.")
 
 # ------------------------------------------------------------------
 # Footer
 # ------------------------------------------------------------------
 st.markdown("---")
-st.caption("CO543/CO5430 — Traffic Sign Detection | Computer Vision Project 2026")
+st.caption("CO543/CO5430 — Traffic Sign Detection | Group 17 | University of Peradeniya 2026")
