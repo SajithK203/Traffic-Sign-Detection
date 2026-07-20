@@ -40,7 +40,7 @@ Traffic sign detection is a core perception problem for:
 
 ## 📊 Results Summary
 
-> All models evaluated on the held-out GTSDB test split (81 images, 3 super-classes). See `results/metrics/` for full logs.
+> All models evaluated on the held-out GTSDB test split (81 images, 3 super classes). See `results/metrics/` for full logs.
 
 | Model | mAP@0.5 | mAP@0.5:0.95 | Precision | Recall |
 |---|---|---|---|---|
