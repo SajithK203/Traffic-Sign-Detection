@@ -165,16 +165,18 @@ def convert_gtsdb(
         converted += 1
 
     print(f"\nDone. Converted: {converted} | Skipped: {skipped}")
-    print(f"   Labels → {labels_dir}")
-    print(f"   Images → {images_dir}")
+    print(f"   Labels -> {labels_dir}")
+    print(f"   Images -> {images_dir}")
 
 
 def main():
     parser = argparse.ArgumentParser(description="Convert GTSDB to YOLO format")
-    parser.add_argument("--gt_file",  required=True,
+    parser.add_argument("--gt_file",  required=False,
                         help="Path to gt.txt from GTSDB")
-    parser.add_argument("--img_dir",  required=True,
+    parser.add_argument("--img_dir",  required=False,
                         help="Directory containing .ppm images")
+    parser.add_argument("--raw_dir",  required=False,
+                        help="Path to the raw GTSDB directory (contains TrainIJCNN2013)")
     parser.add_argument("--out_dir",  required=True,
                         help="Output directory for YOLO files")
     parser.add_argument("--use_fine_classes", action="store_true",
@@ -183,9 +185,22 @@ def main():
                         help="Draw boxes on first N images for visual check")
     args = parser.parse_args()
 
+    if args.raw_dir:
+        raw_dir = Path(args.raw_dir)
+        if (raw_dir / "TrainIJCNN2013").exists():
+            img_dir = raw_dir / "TrainIJCNN2013"
+        else:
+            img_dir = raw_dir
+        gt_file = img_dir / "gt.txt"
+    else:
+        if not args.gt_file or not args.img_dir:
+            parser.error("Either --raw_dir or both --gt_file and --img_dir must be provided.")
+        gt_file = Path(args.gt_file)
+        img_dir = Path(args.img_dir)
+
     convert_gtsdb(
-        gt_file=Path(args.gt_file),
-        img_dir=Path(args.img_dir),
+        gt_file=gt_file,
+        img_dir=img_dir,
         out_dir=Path(args.out_dir),
         use_fine_classes=args.use_fine_classes,
         verify_n=args.verify,
