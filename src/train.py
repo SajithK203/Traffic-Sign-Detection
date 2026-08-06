@@ -53,6 +53,10 @@ def parse_args():
         "--name", default=None,
         help="Run name (for results folder).",
     )
+    parser.add_argument(
+        "--resume", action="store_true",
+        help="Resume training from the last checkpoint.",
+    )
     return parser.parse_args()
 
 
@@ -84,6 +88,7 @@ def main():
     if args.batch  is not None:  train_kwargs["batch"]   = args.batch
     if args.device is not None:  train_kwargs["device"]  = args.device
     if args.name   is not None:  train_kwargs["name"]    = args.name
+    if args.resume:              train_kwargs["resume"]  = True
 
     wrapper.train(config=str(config_path), **train_kwargs)
     print("\n✅ Training complete. Check runs/ for outputs.")
