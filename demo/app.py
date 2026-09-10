@@ -50,11 +50,12 @@ st.caption("CO543/CO5430 — Computer Vision Project Demo | Group 17")
 st.sidebar.header("⚙️ Settings")
 
 MODEL_OPTIONS = {
-    "🏆 Fine-Tuned YOLOv8s (Best — 97.1% mAP)": str(PROJECT_ROOT / "results/checkpoints/gtsdb_yolov8s_v1_best.pt"),
-    "🔵 Fine-Tuned YOLOv8n (95.5% mAP)":        str(PROJECT_ROOT / "results/checkpoints/gtsdb_yolov8n_v1_best.pt"),
-    "⚗️ Fine-Tuned YOLOv8n No Aug (84.8% mAP)": str(PROJECT_ROOT / "results/checkpoints/gtsdb_yolov8n_noaug_v1_best.pt"),
-    "🔬 Classical CV Baseline (HSV + Contour)":  "classical",
-    "🆚 Side-by-Side: Classical vs YOLOv8s":     "compare",
+    "🏆 Fine-Tuned YOLOv8s (Best — 97.1% mAP)":         str(PROJECT_ROOT / "results/checkpoints/gtsdb_yolov8s_v1_best.pt"),
+    "🔵 Fine-Tuned YOLOv8n (95.5% mAP)":                str(PROJECT_ROOT / "results/checkpoints/gtsdb_yolov8n_v1_best.pt"),
+    "⚗️ Fine-Tuned YOLOv8n No Aug (84.8% mAP)":         str(PROJECT_ROOT / "results/checkpoints/gtsdb_yolov8n_noaug_v1_best.pt"),
+    "🔬 Classical CV Baseline (HSV + Contour)":          "classical",
+    "🆚 Side-by-Side: Classical vs YOLOv8s":             "compare",
+    "🧪 Fine-Grained YOLOv8n (43 Classes — Stretch)":   str(PROJECT_ROOT / "runs/detect/train/weights/best.pt"),
 }
 
 model_choice = st.sidebar.selectbox(
