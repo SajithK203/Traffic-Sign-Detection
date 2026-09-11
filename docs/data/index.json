@@ -1,5 +1,6 @@
 {
-  "title": "Traffic Sign Detection and Recognition Using Deep Learning and Classical Computer Vision",
+  "title": "Traffic Sign Detection Using Deep Learning and Classical Computer Vision",
+  "description": "Real-time traffic sign detection and recognition system benchmarked on the German Traffic Sign Detection Benchmark (GTSDB). The project evaluates a classical computer vision pipeline (HSV thresholding, morphological operations, contour analysis) alongside fine-tuned deep learning models (YOLOv8n and YOLOv8s) for both 4-macro and 43-fine-grained traffic sign classification, achieving up to 89.2% mAP@0.5 with high real-time inference throughput (>140 FPS).",
   "team": [
     {
       "name": "R.M.S.S. Kumara",
@@ -24,8 +25,8 @@
   ],
   "supervisors": [
     {
-      "name": "Course Coordinator / Lecturer",
-      "email": "lecturer@eng.pdn.ac.lk"
+      "name": "Dr. Upul Jayasinghe",
+      "email": "upuljm@eng.pdn.ac.lk"
     }
   ],
   "tags": [
@@ -33,7 +34,8 @@
     "Computer Vision",
     "Deep Learning",
     "YOLOv8",
-    "Object Detection"
+    "Object Detection",
+    "GTSDB"
   ],
   "image": "cover_page.jpg",
   "thumbnail": "thumbnail.jpg"
