@@ -1,0 +1,40 @@
+{
+  "title": "Traffic Sign Detection and Recognition Using Deep Learning and Classical Computer Vision",
+  "team": [
+    {
+      "name": "R.M.S.S. Kumara",
+      "email": "e22203@eng.pdn.ac.lk",
+      "eNumber": "E/22/203"
+    },
+    {
+      "name": "K.I. Sewmini",
+      "email": "e22372@eng.pdn.ac.lk",
+      "eNumber": "E/22/372"
+    },
+    {
+      "name": "S.I. Gunawardhana",
+      "email": "e22127@eng.pdn.ac.lk",
+      "eNumber": "E/22/127"
+    },
+    {
+      "name": "A.W.H. Panchani",
+      "email": "e22269@eng.pdn.ac.lk",
+      "eNumber": "E/22/269"
+    }
+  ],
+  "supervisors": [
+    {
+      "name": "Course Coordinator / Lecturer",
+      "email": "lecturer@eng.pdn.ac.lk"
+    }
+  ],
+  "tags": [
+    "Image Processing",
+    "Computer Vision",
+    "Deep Learning",
+    "YOLOv8",
+    "Object Detection"
+  ],
+  "image": "cover_page.jpg",
+  "thumbnail": "thumbnail.jpg"
+}

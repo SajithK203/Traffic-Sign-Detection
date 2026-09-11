@@ -1,0 +1,10 @@
+title: Traffic Sign Detection and Recognition
+remote_theme: cepdnaclk/eYY-project-theme
+description: Real-time Traffic Sign Detection using YOLOv8 and Classical CV
+markdown: kramdown
+
+kramdown:
+  parse_block_html: true
+  syntax_highlighter_opts:
+    block:
+      line_numbers: false
