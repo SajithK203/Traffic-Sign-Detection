@@ -3,7 +3,7 @@ layout: home
 permalink: index.html
 
 # Repository configuration
-repository-name: e22-co543-Traffic-Sign-Detection
+repository-name: e22-co543-traffic-sign-detection
 title: Real-Time Traffic Sign Detection and Recognition
 ---
 
@@ -68,8 +68,8 @@ An interactive Streamlit application is included:
 
 To run locally:
 \\\ash
-git clone https://github.com/cepdnaclk/e22-co543-Traffic-Sign-Detection.git
-cd e22-co543-Traffic-Sign-Detection
+git clone https://github.com/cepdnaclk/e22-co543-traffic-sign-detection.git
+cd e22-co543-traffic-sign-detection
 pip install -r requirements.txt
 streamlit run demo/app.py
 \\\
@@ -90,5 +90,5 @@ streamlit run demo/app.py
 ## 🔗 Project Links
 
 - [Department Project Profile](https://projects.ce.pdn.ac.lk/)
-- [Source Code Repository](https://github.com/cepdnaclk/e22-co543-Traffic-Sign-Detection)
+- [Source Code Repository](https://github.com/cepdnaclk/e22-co543-traffic-sign-detection)
 - [Department of Computer Engineering, University of Peradeniya](https://www.ce.pdn.ac.lk/)
