@@ -500,7 +500,7 @@ with tab_sample:
         for i, (col, f) in enumerate(zip(cols, sample_files)):
             with col:
                 thumb = Image.open(f).resize((160, 120))
-                st.image(thumb, use_column_width=True)
+                st.image(thumb, use_container_width=True)
                 st.markdown('<div class="sample-btn">', unsafe_allow_html=True)
                 if st.button(f.stem, key=f"sample_{i}", use_container_width=True):
                     img_bgr = cv2.imread(str(f))
@@ -614,7 +614,7 @@ with tab_video:
 
                     if preview_frame is not None:
                         st.markdown("**Sample annotated frame:**")
-                        st.image(preview_frame, use_column_width=True)
+                        st.image(preview_frame, use_container_width=True)
 
                     st.markdown("**Annotated Video Preview:**")
                     with open(tmp_out_path, "rb") as vf:
@@ -646,7 +646,7 @@ if img_bgr is not None:
 
         with col1:
             st.markdown('<div class="detect-card"><h4>📷 Original Image</h4>', unsafe_allow_html=True)
-            st.image(img_rgb, use_column_width=True)
+            st.image(img_rgb, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
         with col2:
@@ -655,7 +655,7 @@ if img_bgr is not None:
                 det        = load_classical()
                 detections = det.detect(img_bgr)
                 ann_cv     = det.visualize(img_bgr, detections)
-                st.image(cv2.cvtColor(ann_cv, cv2.COLOR_BGR2RGB), use_column_width=True)
+                st.image(cv2.cvtColor(ann_cv, cv2.COLOR_BGR2RGB), use_container_width=True)
             st.metric("Signs Found", len(detections))
             st.markdown("</div>", unsafe_allow_html=True)
 
@@ -670,7 +670,7 @@ if img_bgr is not None:
                         results = wrapper.predict(source=img_bgr, conf=conf_threshold,
                                                   iou=iou_threshold, verbose=False)
                     ann_yolo = results[0].plot()
-                    st.image(cv2.cvtColor(ann_yolo, cv2.COLOR_BGR2RGB), use_column_width=True)
+                    st.image(cv2.cvtColor(ann_yolo, cv2.COLOR_BGR2RGB), use_container_width=True)
                     n = len(results[0].boxes) if results[0].boxes is not None else 0
                     st.metric("Signs Found", n)
             else:
@@ -684,7 +684,7 @@ if img_bgr is not None:
 
         with col1:
             st.markdown('<div class="detect-card"><h4>📷 Input Image</h4>', unsafe_allow_html=True)
-            st.image(img_rgb, use_column_width=True)
+            st.image(img_rgb, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
         with col2:
@@ -693,7 +693,7 @@ if img_bgr is not None:
                 det        = load_classical()
                 detections = det.detect(img_bgr)
                 ann        = det.visualize(img_bgr, detections)
-                st.image(cv2.cvtColor(ann, cv2.COLOR_BGR2RGB), use_column_width=True)
+                st.image(cv2.cvtColor(ann, cv2.COLOR_BGR2RGB), use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
         if detections:
@@ -723,13 +723,13 @@ if img_bgr is not None:
     The model needs to be trained first before it can be used.
 </div>
 """, unsafe_allow_html=True)
-            st.image(img_rgb, use_column_width=True, caption="Input image (no detection run)")
+            st.image(img_rgb, use_container_width=True, caption="Input image (no detection run)")
         else:
             col1, col2 = st.columns(2)
 
             with col1:
                 st.markdown('<div class="detect-card"><h4>📷 Input Image</h4>', unsafe_allow_html=True)
-                st.image(img_rgb, use_column_width=True)
+                st.image(img_rgb, use_container_width=True)
                 st.markdown("</div>", unsafe_allow_html=True)
 
             with col2:
@@ -743,7 +743,7 @@ if img_bgr is not None:
                             iou=iou_threshold, verbose=False
                         )
                     annotated_bgr = results[0].plot()
-                    st.image(cv2.cvtColor(annotated_bgr, cv2.COLOR_BGR2RGB), use_column_width=True)
+                    st.image(cv2.cvtColor(annotated_bgr, cv2.COLOR_BGR2RGB), use_container_width=True)
                 st.markdown("</div>", unsafe_allow_html=True)
 
             boxes = results[0].boxes
