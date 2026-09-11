@@ -13,7 +13,7 @@
 
 **Course**: CO543 / CO5430 — Computer Vision <br>
 **Project Track**: Application (Transport) + Model/Method (Object Detection) <br>
-**Period**: 1 July 2026 – 7 September 2026
+**Period**: 1 July 2026 – 11 September 2026
 
 <a href="https://github.com/SajithK203/Traffic-Sign-Detection/stargazers"><img src="https://img.shields.io/github/stars/SajithK203/Traffic-Sign-Detection?style=social" alt="Stars Badge"/></a>
 <a href="https://github.com/SajithK203/Traffic-Sign-Detection/network/members"><img src="https://img.shields.io/github/forks/SajithK203/Traffic-Sign-Detection?style=social" alt="Forks Badge"/></a>
@@ -26,10 +26,7 @@
 
 This project builds a system that takes an **image or video frame** as input and produces the **location (bounding box)** of every traffic sign in the scene, together with its **class** where a classification stage is added.
 
-<div align="center">
-  <!-- Custom Advanced CSS-Animated SVG -->
-  <img src="./hero-animation.svg" alt="Traffic Sign Detection Animation" width="800" />
-</div>
+
 
 Traffic sign detection is a core perception problem for:
 - 🚗 **Advanced Driver-Assistance Systems (ADAS)**
@@ -140,6 +137,20 @@ python src/inference.py --weights results/checkpoints/best.pt --source path/to/i
 
 ---
 
+## 🎬 Recorded Demo & Submission
+
+> **Final submission — 11 September 2026**
+
+| Deliverable | Link / Location |
+|---|---|
+| 📹 Recorded presentation & demo | *(add your video link here — Google Drive / YouTube unlisted)* |
+| 📄 Final report (PDF) | [`reports/final_report.md`](reports/final_report.md) · [`reports/final_report.docx`](reports/final_report.docx) |
+| 📊 Presentation slides | [`slides/final_presentation_pro.pptx`](slides/final_presentation_pro.pptx) |
+| 👥 Contribution statement | [`docs/CONTRIBUTIONS.md`](docs/CONTRIBUTIONS.md) |
+| 🤖 AI use statement | [`docs/AI_USE_STATEMENT.md`](docs/AI_USE_STATEMENT.md) |
+
+---
+
 ## 📦 Datasets
 
 | Dataset | Region | Size | License |
@@ -176,12 +187,13 @@ traffic-sign-detection/
 
 ## 👥 Group 17 Details
 
-| Member | Reg. No. |
-|---|---|
-| R.M.S.S.KUMARA | E/22/203 |
-| K.I.SEWMINI | E/22/372 |
-| S.I.GUNAWARDHANA | E/22/127 |
-| A.W.H.PANCHANI | E/22/269 |
+| Member | Reg. No. | Role | Main Contributions |
+|---|---|---|---|
+| S.I. Gunawardhana | E/22/127 | Dataset Pipeline Lead | Dataset collection & preprocessing, annotation conversion, train/val/test splitting, exploratory data analysis |
+| K.I. Sewmini | E/22/372 | Classical CV Lead | HSV colour segmentation, contour-based detection baseline, baseline evaluation & analysis |
+| R.M.S.S. Kumara | E/22/203 | YOLO Training Lead | YOLOv8n/s fine-tuning, model training & hyperparameter configuration, ablation experiments |
+| A.W.H. Panchani | E/22/269 | Evaluation & Demo Lead | Model evaluation & visualisation, Streamlit demo app, documentation & presentation preparation |
+
 
 ---
 

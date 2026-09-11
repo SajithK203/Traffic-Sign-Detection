@@ -1,138 +1,78 @@
-# Individual Contributions Log
-
-> Update this file **every week**. It becomes the required contribution table at final submission.
+# Individual Contribution Statement
 
 ---
 
-## Team Members
+**UNIVERSITY OF PERADENIYA**  
+**FACULTY OF ENGINEERING**  
+**DEPARTMENT OF COMPUTER ENGINEERING**
 
-| ID | Name | Reg. No. | Role |
+**CO5430 - Image Processing**
+
+---
+
+## Project Title
+
+Traffic Sign Detection Using Deep Learning and Classical Computer Vision
+
+---
+
+## Group Members
+
+| Name | Registration Number |
+|---|---|
+| R.M.S.S. Kumara   | E/22/203 |
+| K.I. Sewmini      | E/22/372 |
+| S.I. Gunawardhana | E/22/127 |
+| A.W.H. Panchani   | E/22/269 |
+
+---
+
+## Individual Contributions
+
+| Name | Student ID | Main Contributions |
+|---|---|---|
+| S.I. Gunawardhana | E/22/127 | • Dataset collection and preprocessing<br>• Data conversion and train/validation/test splitting<br>• Exploratory data analysis |
+| K.I. Sewmini | E/22/372 | • Classical computer vision baseline<br>• HSV colour segmentation and contour-based detection<br>• Baseline evaluation and analysis |
+| R.M.S.S. Kumara | E/22/203 | • YOLO model implementation and fine-tuning<br>• Model training and hyperparameter configuration<br>• Ablation experiments |
+| A.W.H. Panchani | E/22/269 | • Model evaluation and visualization<br>• Streamlit demonstration application<br>• Documentation and presentation preparation |
+
+---
+
+## Detailed Contribution Description
+
+**S.I. Gunawardhana – E/22/127**  
+Contributed to dataset preparation, preprocessing, annotation conversion, dataset splitting, and exploratory data analysis. Assisted with organizing the dataset and ensuring that it was correctly prepared for the object detection experiments.
+
+**K.I. Sewmini – E/22/372**  
+Developed and evaluated the classical computer vision baseline using HSV colour processing, contour detection, and non-maximum suppression. Analyzed the limitations and performance of the traditional approach.
+
+**R.M.S.S. Kumara – E/22/203**  
+Implemented and trained the YOLO-based traffic sign detection models. Conducted fine-tuning experiments with YOLOv8n and YOLOv8s, including the augmentation/no-augmentation ablation study. Analyzed the resulting detection performance.
+
+**A.W.H. Panchani – E/22/269**  
+Worked on model evaluation, visualization of experimental results and development/testing of the Streamlit demonstration application. Contributed to project documentation, final presentation preparation, and demonstration setup.
+
+---
+
+## Shared Contributions
+
+All group members contributed to:
+- Project planning and discussion
+- Reviewing experimental results
+- Debugging and testing
+- Interpretation of results
+- Preparation and review of the final report
+- Final presentation/demo preparation
+
+---
+
+## Declaration
+
+We confirm that the contributions described above accurately represent the work carried out by each member of the group. All members contributed to the development, evaluation, documentation and finalization of the project.
+
+| Name | Student ID | Signature | Date |
 |---|---|---|---|
-| A | ____________ | _______ | Data & Datasets Lead |
-| B | ____________ | _______ | Baseline & Classical CV Lead |
-| C | ____________ | _______ | Model Training Lead |
-| D | ____________ | _______ | Evaluation, Demo & Report Lead |
-
----
-
-## Weekly Contribution Log
-
-### Week 1 — 1–7 Jul 2026 (M0: Setup)
-
-| Task | Owner | Status |
-|---|---|---|
-| Create GitHub repo & skeleton structure | All | ✅ Done — repo at https://github.com/SajithK203/Traffic-Sign-Detection |
-| Register topic with IIC | All | ☐ |
-| Assign roles | All | ☐ |
-| Set up virtual environment & requirements.txt | A | ☐ Pending per-machine setup |
-| Download GTSDB dataset (TrainIJCNN2013 + TestIJCNN2013) | A | ✅ Done — 600 train .ppm images confirmed |
-
----
-
-### Week 2 — 8–14 Jul 2026 (M1: Proposal due 14 Jul)
-
-| Task | Owner | Status |
-|---|---|---|
-| Write proposal: problem statement | All | ☐ |
-| Write proposal: related work (3+ refs) | B, D | ☐ |
-| Write proposal: dataset plan | A | ☐ |
-| Write proposal: method plan | C | ☐ |
-| Write proposal: evaluation metrics | D | ☐ |
-| Write proposal: timeline + risks | All | ☐ |
-| Submit proposal PDF | D | ☐ |
-
----
-
-### Week 3 — 15–21 Jul 2026 (M2 Prep)
-
-| Task | Owner | Status |
-|---|---|---|
-| GTSDB annotation conversion (gt.txt -> YOLO .txt format) | A | ✅ Done — 506 images converted, .ppm -> .jpg via convert_gtsdb.py |
-| 70/15/15 stratified train/val/test split | A | ✅ Done — train:365, val:80, test:81 via split_dataset.py |
-| Visual verification of converted boxes (5 verify images) | A | ✅ Done — inspect data/processed/gtsdb/all/verify_*.jpg |
-| EDA notebook (class distribution, size histogram) | A | ☐ In Progress — run notebooks/01_eda.ipynb |
-| Classical CV baseline: HSV thresholding | B | ☐ |
-| Classical CV baseline: Hough/contour shape detect | B | ☐ |
-
----
-
-### Week 4 — 22–28 Jul 2026 (M2: Checkpoint 1 due 28 Jul)
-
-| Task | Owner | Status |
-|---|---|---|
-| Zero-shot YOLOv8n baseline (no fine-tuning) | B, C | ☐ |
-| Evaluate both baselines on GTSDB test split | D | ☐ |
-| Precision/recall numbers for checkpoint deck | D | ☐ |
-| Prepare 5-slide checkpoint deck | All | ☐ |
-
----
-
-### Week 5–6 — 29 Jul–11 Aug 2026 (M3 Prep)
-
-| Task | Owner | Status |
-|---|---|---|
-| Fine-tune YOLOv8n on GTSDB | C | ☐ |
-| Experiment config YAML (gtsdb_yolov8n.yaml) | C | ☐ |
-| Training with augmentation | C | ☐ |
-| Preliminary mAP@0.5 results | D | ☐ |
-| Set up W&B experiment tracking | C | ☐ |
-| Start ablation (with/without augmentation) | C, D | ☐ |
-
----
-
-### Week 7–8 — 12–18 Aug 2026 (M3: Checkpoint 2 due 18 Aug)
-
-| Task | Owner | Status |
-|---|---|---|
-| Qualitative examples (success + failure) | D | ☐ |
-| Failure case analysis (small signs, night, blur) | D | ☐ |
-| Prepare 5–7 slide checkpoint deck | All | ☐ |
-
----
-
-### Week 8 — 19–25 Aug 2026 (M4: Experiment Freeze 25 Aug)
-
-| Task | Owner | Status |
-|---|---|---|
-| Lock final experimental plan | All | ☐ |
-| Finish all ablation/comparison runs | C, D | ☐ |
-| Final results table (all model variants) | D | ☐ |
-
----
-
-### Week 9 — 26 Aug–1 Sep 2026 (M5: Draft Report due 1 Sep)
-
-| Task | Owner | Status |
-|---|---|---|
-| Report: Abstract + Introduction | D | ☐ |
-| Report: Data section | A | ☐ |
-| Report: Method section | B, C | ☐ |
-| Report: Experiments + Results section | C, D | ☐ |
-| Report: Conclusion + References | All | ☐ |
-| Clean up repository (README, requirements) | All | ☐ |
-| Demo app (Streamlit) | D | ☐ |
-| Demo rehearsal | All | ☐ |
-
----
-
-### Week 10 — 2–7 Sep 2026 (M6: Final Submission due 7 Sep)
-
-| Task | Owner | Status |
-|---|---|---|
-| Final report PDF | D | ☐ |
-| Final slides | All | ☐ |
-| Repository final check (README, reproducibility) | All | ☐ |
-| Demo / video recording | All | ☐ |
-| Submit | All | ☐ |
-
----
-
-## Final Contribution Summary
-*(Fill in at submission time)*
-
-| Member | Data | Baselines | Training | Evaluation | Demo | Report | Repo |
-|---|---|---|---|---|---|---|---|
-| A | | | | | | | |
-| B | | | | | | | |
-| C | | | | | | | |
-| D | | | | | | | |
+| R.M.S.S. Kumara   | E/22/203 | | 10 September 2026 |
+| K.I. Sewmini      | E/22/372 | | 10 September 2026 |
+| S.I. Gunawardhana | E/22/127 | | 10 September 2026 |
+| A.W.H. Panchani   | E/22/269 | | 10 September 2026 |

@@ -22,6 +22,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 import streamlit as st
+import streamlit.components.v1 as components
 from PIL import Image
 
 # Suppress all Python and library warnings / verbose logs
@@ -65,13 +66,30 @@ html, body, [class*="css"]  { font-family: 'Inter', sans-serif; }
 [data-testid="stSidebar"] {
     background: linear-gradient(180deg, #0A295C 0%, #154E9A 100%);
 }
-[data-testid="stSidebar"] * { color: #E8F0FE !important; }
+/* Scope text color only to direct sidebar text, not popups */
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] span,
+[data-testid="stSidebar"] div,
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] small { color: #E8F0FE !important; }
 [data-testid="stSidebar"] .stSelectbox label,
 [data-testid="stSidebar"] .stSlider label { color: #A8C4E8 !important; font-size: 0.82rem; }
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3 { color: #FFFFFF !important; }
 [data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.15); }
+/* Selectbox box itself — white bg, dark text for readability */
+[data-testid="stSidebar"] [data-baseweb="select"] > div {
+    background: rgba(255,255,255,0.15) !important;
+    border-color: rgba(255,255,255,0.3) !important;
+    color: #FFFFFF !important;
+}
+[data-testid="stSidebar"] [data-baseweb="select"] [data-testid="stMarkdownContainer"] p {
+    color: #FFFFFF !important;
+}
+/* Slider value labels */
+[data-testid="stSidebar"] [data-testid="stSlider"] [aria-valuetext],
+[data-testid="stSidebar"] [data-testid="stSlider"] output { color: #FFFFFF !important; }
 [data-testid="stSidebar"] .sidebar-badge {
     background: rgba(255,255,255,0.12);
     border-radius: 8px;
@@ -79,6 +97,7 @@ html, body, [class*="css"]  { font-family: 'Inter', sans-serif; }
     margin-bottom: 8px;
     font-size: 0.82rem;
 }
+
 
 /* ── Header hero ─────────────────────────────── */
 .hero-header {
@@ -246,9 +265,114 @@ html, body, [class*="css"]  { font-family: 'Inter', sans-serif; }
 /* ── Suppress Streamlit default elements ─────── */
 #MainMenu { visibility: hidden; }
 footer    { visibility: hidden; }
-header    { visibility: hidden; }
+/* Hide deploy/status badges but keep sidebar toggle */
+header [data-testid="stToolbar"]      { visibility: hidden; }
+header [data-testid="stDecoration"]   { display: none; }
+header [data-testid="stStatusWidget"] { visibility: hidden; }
+
+/* ── Streamlit top header bar ─────────────────── */
+/* Give the header a subtle background so the toggle is always visible */
+header[data-testid="stHeader"] {
+    background: rgba(247, 249, 252, 0.95);
+    border-bottom: 1px solid #E2E8F0;
+}
+
+/* ── Sidebar collapse / expand toggle ─────────── */
+/* The arrow button that appears when sidebar is collapsed */
+[data-testid="collapsedControl"] {
+    background: #0A295C !important;
+    border-radius: 0 8px 8px 0 !important;
+    padding: 8px 6px !important;
+    color: #FFFFFF !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+[data-testid="collapsedControl"] svg { fill: #FFFFFF !important; color: #FFFFFF !important; }
+/* The collapse button inside the open sidebar */
+[data-testid="stSidebarCollapseButton"] button {
+    color: #FFFFFF !important;
+    background: rgba(255,255,255,0.15) !important;
+    border-radius: 6px !important;
+}
+[data-testid="stSidebarCollapseButton"] svg { fill: #FFFFFF !important; }
 </style>
 """, unsafe_allow_html=True)
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Floating sidebar toggle — JS injection via components.html
+# CSS-only fixes are unreliable; this creates a persistent ☰ button that
+# programmatically clicks Streamlit's native sidebar toggle via parent.document.
+# ──────────────────────────────────────────────────────────────────────────────
+components.html("""
+<script>
+(function() {
+    function injectToggleButton() {
+        var doc = window.parent.document;
+        if (doc.getElementById('__custom_sidebar_toggle__')) return;
+
+        var btn = doc.createElement('button');
+        btn.id = '__custom_sidebar_toggle__';
+        btn.title = 'Toggle sidebar';
+        btn.innerHTML = '&#9776;';
+        btn.style.cssText = [
+            'position:fixed',
+            'top:12px',
+            'left:12px',
+            'z-index:999999',
+            'background:#0A295C',
+            'color:#FFFFFF',
+            'border:none',
+            'border-radius:8px',
+            'padding:7px 11px',
+            'font-size:1.15rem',
+            'line-height:1',
+            'cursor:pointer',
+            'box-shadow:0 2px 8px rgba(0,0,0,0.35)',
+            'transition:background 0.2s'
+        ].join(';');
+
+        btn.onmouseenter = function() { this.style.background = '#1565C0'; };
+        btn.onmouseleave = function() { this.style.background = '#0A295C'; };
+
+        btn.onclick = function() {
+            // Try every known Streamlit sidebar toggle selector
+            var selectors = [
+                '[data-testid="collapsedControl"]',
+                '[data-testid="stSidebarCollapseButton"] button',
+                'button[aria-label="Close sidebar"]',
+                'button[aria-label="Open sidebar"]',
+                'section[data-testid="stSidebar"] button'
+            ];
+            for (var i = 0; i < selectors.length; i++) {
+                var el = doc.querySelector(selectors[i]);
+                if (el) { el.click(); return; }
+            }
+        };
+
+        // Hide the button when the sidebar is fully open (not just peeking)
+        function syncVisibility() {
+            var sidebar = doc.querySelector('[data-testid="stSidebar"]');
+            if (!sidebar) return;
+            var w = sidebar.getBoundingClientRect().width;
+            // Show the ☰ button only when sidebar is collapsed (width < 50px)
+            btn.style.display = (w < 50) ? 'block' : 'none';
+        }
+
+        doc.body.appendChild(btn);
+        syncVisibility();
+
+        // Watch for sidebar expand/collapse
+        var observer = new MutationObserver(syncVisibility);
+        observer.observe(doc.body, { attributes: true, subtree: true, attributeFilter: ['style', 'class'] });
+    }
+
+    // Try immediately, then again after Streamlit finishes rendering
+    injectToggleButton();
+    setTimeout(injectToggleButton, 800);
+    setTimeout(injectToggleButton, 2500);
+})();
+</script>
+""", height=0, scrolling=False)
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Hero header
