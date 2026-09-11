@@ -28,6 +28,12 @@ This project builds a system that takes an **image or video frame** as input and
 
 
 
+<div align="center">
+  <!-- Custom Advanced CSS-Animated SVG -->
+  <img src="./hero-animation.svg" alt="Traffic Sign Detection Animation" width="800" />
+</div>
+
+
 Traffic sign detection is a core perception problem for:
 - 🚗 **Advanced Driver-Assistance Systems (ADAS)**
 - 🤖 **Autonomous vehicles**
@@ -205,3 +211,4 @@ traffic-sign-detection/
     </a>
   </p>
 </div>
+
